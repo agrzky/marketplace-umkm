@@ -1,0 +1,98 @@
+export const products = [
+  {
+    id: "kaos-polos",
+    image: "/images/kaos-polos.jpg",
+    title: "Kaos Polos",
+    price: "Rp120.000",
+    rating: 5,
+    reviews: 50,
+    description:
+      "Kaos polos premium dengan bahan katun combed 30s yang nyaman dipakai. Tersedia dalam berbagai warna dan ukuran. Cocok untuk daily wear atau custom design.",
+    seller: "Fashion Mahasiswa",
+    category: "Fashion",
+  },
+  {
+    id: "tas-kanvas",
+    image: "/images/tas-kanvas.jpg",
+    title: "Tas Kanvas",
+    price: "Rp50.000",
+    rating: 5,
+    reviews: 9,
+    description:
+      "Tas kanvas berkualitas tinggi dengan bahan tebal dan tahan lama. Cocok untuk membawa buku, laptop, atau kebutuhan sehari-hari. Desain minimalis dan praktis.",
+    seller: "Craft Studio",
+    category: "Aksesoris",
+  },
+  {
+    id: "botol-minum",
+    image: "/images/botol-minum.jpg",
+    title: "Botol Minum",
+    price: "Rp50.000",
+    rating: 5,
+    reviews: 75,
+    description:
+      "Botol minum stainless steel dengan insulasi ganda yang menjaga minuman tetap dingin hingga 24 jam atau panas hingga 12 jam. Kapasitas 500ml dengan tutup yang aman.",
+    seller: "EcoLife",
+    category: "Peralatan",
+  },
+  {
+    id: "cetakan-seni",
+    image: "/images/cetakan-seni.jpg",
+    title: "Cetakan Seni",
+    price: "Rp150.000",
+    rating: 5,
+    reviews: 35,
+    description:
+      "Cetakan seni abstrak dengan bingkai kayu premium. Karya original dari mahasiswa seni rupa. Ukuran 30x40cm, cocok untuk dekorasi ruangan atau hadiah spesial.",
+    seller: "Art Corner",
+    category: "Kerajinan",
+  },
+  {
+    id: "dompet-kulit",
+    image: "/images/dompet-kulit.jpg",
+    title: "Dompet Kulit",
+    price: "Rp85.000",
+    rating: 4,
+    reviews: 28,
+    description:
+      "Dompet kulit asli handmade dengan jahitan rapi dan tahan lama. Memiliki banyak slot kartu dan ruang yang cukup untuk uang kertas. Desain slim fit yang nyaman di saku.",
+    seller: "Leather Craft",
+    category: "Aksesoris",
+  },
+  {
+    id: "gantungan-kunci",
+    image: "/images/gantungan-kunci.jpg",
+    title: "Gantungan Kunci",
+    price: "Rp15.000",
+    rating: 4,
+    reviews: 42,
+    description:
+      "Gantungan kunci custom dengan berbagai pilihan desain. Terbuat dari akrilik berkualitas dengan print full color yang tahan lama. Bisa request desain sendiri.",
+    seller: "Creative Goods",
+    category: "Aksesoris",
+  },
+  {
+    id: "mug-custom",
+    image: "/images/mug-custom.jpg",
+    title: "Mug Custom",
+    price: "Rp35.000",
+    rating: 5,
+    reviews: 19,
+    description:
+      "Mug keramik berkualitas dengan desain custom. Bisa dicetak dengan foto, nama, atau desain pilihan Anda. Aman untuk microwave dan dishwasher.",
+    seller: "Print Studio",
+    category: "Peralatan",
+  },
+  {
+    id: "tote-bag",
+    image: "/images/tote-bag.jpg",
+    title: "Tote Bag",
+    price: "Rp45.000",
+    rating: 4,
+    reviews: 31,
+    description:
+      "Tote bag kanvas dengan desain eksklusif karya mahasiswa desain grafis. Ukuran lebar dan nyaman untuk dibawa kemana-mana. Bahan tebal dan tahan lama.",
+    seller: "Craft Studio",
+    category: "Fashion",
+  },
+]
