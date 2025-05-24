@@ -1,14 +1,18 @@
 "use client"
 
 import Link from "next/link"
-import { ShoppingBag, Menu, X, ShoppingCart } from "lucide-react"
+import { ShoppingBag, Menu, X, ShoppingCart, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 
 export default function Header() {
+  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,6 +22,35 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  useEffect(() => {
+    // Cek status login dari token
+    const token = localStorage.getItem('token')
+    setIsLoggedIn(!!token)
+
+    // Ambil role user dari localStorage jika ada
+    const role = localStorage.getItem('userRole')
+    setUserRole(role)
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('userRole')
+    setIsLoggedIn(false)
+    setUserRole(null)
+    router.push('/login')
+  }
+
+  const getDashboardLink = () => {
+    switch(userRole) {
+      case 'ADMIN':
+        return '/admin'
+      case 'SELLER':
+        return '/seller/dashboard'
+      default:
+        return '/user/dashboard'
+    }
+  }
 
   return (
     <header
@@ -55,14 +88,34 @@ export default function Header() {
                 </span>
               </Button>
             </Link>
-            <Link href="/login">
-              <Button variant="outline" className="border-blue-500 text-blue-500 hover:bg-blue-50">
-                Login
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button className="bg-blue-500 text-white hover:bg-blue-600">Register</Button>
-            </Link>
+            
+            {isLoggedIn ? (
+              <div className="flex items-center gap-4">
+                <Link href={getDashboardLink()}>
+                  <Button variant="ghost" size="icon">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  className="border-blue-500 text-blue-500 hover:bg-blue-50"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="outline" className="border-blue-500 text-blue-500 hover:bg-blue-50">
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button className="bg-blue-500 text-white hover:bg-blue-600">Register</Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -96,15 +149,41 @@ export default function Header() {
               >
                 Tentang Kami
               </Link>
-              <div className="flex items-center gap-4 mt-4">
-                <Link href="/login" className="w-full" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="outline" className="w-full border-blue-500 text-blue-500 hover:bg-blue-50">
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/register" className="w-full" onClick={() => setIsMenuOpen(false)}>
-                  <Button className="w-full bg-blue-500 text-white hover:bg-blue-600">Register</Button>
-                </Link>
+              <div className="flex flex-col gap-4 mt-4">
+                {isLoggedIn ? (
+                  <>
+                    <Link
+                      href={getDashboardLink()}
+                      className="text-gray-700 hover:text-blue-500 transition-colors font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <Button
+                      variant="outline"
+                      className="border-blue-500 text-blue-500 hover:bg-blue-50 w-full"
+                      onClick={() => {
+                        handleLogout()
+                        setIsMenuOpen(false)
+                      }}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" className="w-full" onClick={() => setIsMenuOpen(false)}>
+                      <Button variant="outline" className="border-blue-500 text-blue-500 hover:bg-blue-50 w-full">
+                        Login
+                      </Button>
+                    </Link>
+                    <Link href="/register" className="w-full" onClick={() => setIsMenuOpen(false)}>
+                      <Button className="bg-blue-500 text-white hover:bg-blue-600 w-full">
+                        Register
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </nav>
           </div>

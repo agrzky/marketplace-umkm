@@ -1,16 +1,76 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+'use client';
 
-export const metadata: Metadata = {
-  title: "Login | Marketplace UMKM Mahasiswa",
-  description: "Masuk ke akun Marketplace UMKM Mahasiswa Anda.",
-}
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validasi form
+    if (!formData.email || !formData.password) {
+      toast.error("Email dan password harus diisi");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Terjadi kesalahan saat login');
+      }
+
+      // Simpan token di localStorage
+      localStorage.setItem('token', data.token);
+      
+      toast.success('Login berhasil!');
+      
+      // Redirect berdasarkan role
+      if (data.user.role === 'ADMIN') {
+        router.push('/admin');
+      } else if (data.user.role === 'SELLER') {
+        router.push('/seller/dashboard');
+      } else {
+        router.push('/user/dashboard');
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Email atau password salah');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="py-12 md:py-24">
       <div className="container mx-auto px-4">
@@ -20,22 +80,39 @@ export default function LoginPage() {
               <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
               <CardDescription className="text-center">Masuk ke akun Anda untuk melanjutkan</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="nama@example.com" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link href="/lupa-password" className="text-sm text-blue-500 hover:underline">
-                    Lupa password?
-                  </Link>
+            <form onSubmit={handleSubmit}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="nama@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                  />
                 </div>
-                <Input id="password" type="password" />
-              </div>
-              <Button className="w-full">Login</Button>
-            </CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    <Link href="/lupa-password" className="text-sm text-blue-500 hover:underline">
+                      Lupa password?
+                    </Link>
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                  />
+                </div>
+                <Button className="w-full" type="submit" disabled={isLoading}>
+                  {isLoading ? "Memproses..." : "Login"}
+                </Button>
+              </CardContent>
+            </form>
             <CardFooter className="flex flex-col space-y-4">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -46,8 +123,8 @@ export default function LoginPage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline">Google</Button>
-                <Button variant="outline">Facebook</Button>
+                <Button variant="outline" disabled={isLoading}>Google</Button>
+                <Button variant="outline" disabled={isLoading}>Facebook</Button>
               </div>
             </CardFooter>
           </Card>
@@ -60,5 +137,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
