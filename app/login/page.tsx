@@ -7,11 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [loginStatus, setLoginStatus] = useState<{ type: 'success' | 'error' | null; message: string | null }>({ type: null, message: null });
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -45,27 +48,49 @@ export default function LoginPage() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Terjadi kesalahan saat login');
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userRole', data.user.role);
+        
+        // Dispatch custom event untuk memperbarui header
+        window.dispatchEvent(new Event('storage'));
+        
+        toast.success('Login berhasil!');
+        
+        // Redirect berdasarkan role
+        switch (data.user.role) {
+          case 'ADMIN':
+            router.push('/admin');
+            break;
+          case 'SELLER':
+            router.push('/seller/dashboard');
+            break;
+          default:
+            router.push('/user/dashboard');
+        }
       }
+      
+      setLoginStatus({
+        type: 'success',
+        message: 'Login berhasil! Anda akan dialihkan ke halaman dashboard.'
+      });
 
-      // Simpan token di localStorage
-      localStorage.setItem('token', data.token);
-      
-      toast.success('Login berhasil!');
-      
-      // Redirect berdasarkan role
-      if (data.user.role === 'ADMIN') {
-        router.push('/admin');
-      } else if (data.user.role === 'SELLER') {
-        router.push('/seller/dashboard');
-      } else {
-        router.push('/user/dashboard');
-      }
+      // Redirect berdasarkan role setelah 2 detik
+      setTimeout(() => {
+        if (localStorage.getItem('userRole') === 'ADMIN') {
+          router.push('/admin');
+        } else if (localStorage.getItem('userRole') === 'SELLER') {
+          router.push('/seller/dashboard');
+        } else {
+          router.push('/user/dashboard');
+        }
+      }, 2000);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Email atau password salah');
+      setLoginStatus({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Email atau password salah'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -75,6 +100,21 @@ export default function LoginPage() {
     <div className="py-12 md:py-24">
       <div className="container mx-auto px-4">
         <div className="max-w-md mx-auto">
+          {loginStatus.type && (
+            <Alert className={`mb-4 ${loginStatus.type === 'success' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+              {loginStatus.type === 'success' ? (
+                <CheckCircle2 className="h-5 w-5" />
+              ) : (
+                <AlertCircle className="h-5 w-5" />
+              )}
+              <AlertTitle className="text-lg font-semibold">
+                {loginStatus.type === 'success' ? 'Login Berhasil!' : 'Login Gagal!'}
+              </AlertTitle>
+              <AlertDescription className="text-base">
+                {loginStatus.message}
+              </AlertDescription>
+            </Alert>
+          )}
           <Card>
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>

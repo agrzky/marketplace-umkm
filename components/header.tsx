@@ -25,12 +25,23 @@ export default function Header() {
 
   useEffect(() => {
     // Cek status login dari token
-    const token = localStorage.getItem('token')
-    setIsLoggedIn(!!token)
+    const checkLoginStatus = () => {
+      const token = localStorage.getItem('token')
+      setIsLoggedIn(!!token)
 
-    // Ambil role user dari localStorage jika ada
-    const role = localStorage.getItem('userRole')
-    setUserRole(role)
+      // Ambil role user dari localStorage jika ada
+      const role = localStorage.getItem('userRole')
+      setUserRole(role)
+    }
+
+    // Cek status awal
+    checkLoginStatus()
+
+    // Tambahkan event listener untuk storage changes
+    window.addEventListener('storage', checkLoginStatus)
+
+    // Cleanup event listener
+    return () => window.removeEventListener('storage', checkLoginStatus)
   }, [])
 
   const handleLogout = () => {

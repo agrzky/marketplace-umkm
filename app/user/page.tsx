@@ -1,11 +1,112 @@
+'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { User, MapPin, Phone, Mail } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from "sonner";
 
 export default function UserProfilePage() {
+  const router = useRouter();
+  const [userData, setUserData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    bio: ''
+  });
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/user/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data);
+          setFormData({
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            bio: data.bio || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        toast.error('Gagal memuat data profil');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [router]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        const updatedData = await response.json();
+        setUserData(updatedData);
+        toast.success('Profil berhasil diperbarui');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Gagal memperbarui profil');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Terjadi kesalahan saat memperbarui profil');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -13,7 +114,7 @@ export default function UserProfilePage() {
           <h2 className="text-2xl font-bold tracking-tight">Profil Saya</h2>
           <p className="text-muted-foreground">Kelola informasi profil Anda</p>
         </div>
-        <Button>Simpan Perubahan</Button>
+        <Button onClick={handleSubmit}>Simpan Perubahan</Button>
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
@@ -44,58 +145,55 @@ export default function UserProfilePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">Nama Depan</Label>
-                      <Input id="firstName" defaultValue="Budi" />
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName">Nama Belakang</Label>
-                      <Input id="lastName" defaultValue="Santoso" />
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" defaultValue="budi.santoso@example.com" />
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="phone">Nomor Telepon</Label>
-                    <Input id="phone" type="tel" defaultValue="+62 812 3456 7890" />
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="bio">Bio</Label>
-                    <textarea
+                    <Textarea
                       id="bio"
-                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      name="bio"
                       placeholder="Ceritakan sedikit tentang diri Anda"
-                      defaultValue="Mahasiswa Teknik Informatika yang senang berbelanja produk lokal."
+                      value={formData.bio}
+                      onChange={handleInputChange}
                     />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Informasi Kontak</CardTitle>
-              <CardDescription>Informasi kontak yang dapat dihubungi</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Phone className="h-5 w-5 text-gray-500 mt-0.5" />
-                  <div>
-                    <p className="font-medium">+62 812 3456 7890</p>
-                    <p className="text-sm text-muted-foreground">Nomor Telepon Utama</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Mail className="h-5 w-5 text-gray-500 mt-0.5" />
-                  <div>
-                    <p className="font-medium">budi.santoso@example.com</p>
-                    <p className="text-sm text-muted-foreground">Email Utama</p>
                   </div>
                 </div>
               </div>
@@ -106,63 +204,11 @@ export default function UserProfilePage() {
         <TabsContent value="address" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Alamat Pengiriman</CardTitle>
+              <CardTitle>Alamat</CardTitle>
               <CardDescription>Kelola alamat pengiriman Anda</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="border rounded-lg p-4 relative">
-                <div className="absolute top-4 right-4">
-                  <Button variant="ghost" size="sm">
-                    Edit
-                  </Button>
-                </div>
-
-                <div className="flex items-start gap-3 mb-4">
-                  <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
-                  <div>
-                    <p className="font-medium">Alamat Rumah</p>
-                    <p className="text-sm text-muted-foreground">Alamat Utama</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1 ml-8">
-                  <p className="font-medium">Budi Santoso</p>
-                  <p>Jl. Merdeka No. 123, RT 05/RW 02</p>
-                  <p>Kelurahan Sukamaju, Kecamatan Cilodong</p>
-                  <p>Kota Depok, Jawa Barat 16413</p>
-                  <p>Indonesia</p>
-                  <p>+62 812 3456 7890</p>
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-4 relative">
-                <div className="absolute top-4 right-4">
-                  <Button variant="ghost" size="sm">
-                    Edit
-                  </Button>
-                </div>
-
-                <div className="flex items-start gap-3 mb-4">
-                  <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
-                  <div>
-                    <p className="font-medium">Alamat Kantor</p>
-                    <p className="text-sm text-muted-foreground">Alamat Alternatif</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1 ml-8">
-                  <p className="font-medium">Budi Santoso</p>
-                  <p>Gedung Menara Tinggi, Lantai 12</p>
-                  <p>Jl. Jendral Sudirman Kav. 45-46</p>
-                  <p>Jakarta Selatan, DKI Jakarta 12190</p>
-                  <p>Indonesia</p>
-                  <p>+62 812 3456 7890</p>
-                </div>
-              </div>
-
-              <Button variant="outline" className="w-full">
-                Tambah Alamat Baru
-              </Button>
+            <CardContent>
+              <p>Fitur alamat akan segera hadir</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -170,62 +216,15 @@ export default function UserProfilePage() {
         <TabsContent value="security" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Ubah Password</CardTitle>
-              <CardDescription>Perbarui password akun Anda</CardDescription>
+              <CardTitle>Keamanan</CardTitle>
+              <CardDescription>Kelola keamanan akun Anda</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Password Saat Ini</Label>
-                <Input id="currentPassword" type="password" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Password Baru</Label>
-                <Input id="newPassword" type="password" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Konfirmasi Password Baru</Label>
-                <Input id="confirmPassword" type="password" />
-              </div>
-
-              <Button>Perbarui Password</Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Keamanan Akun</CardTitle>
-              <CardDescription>Kelola pengaturan keamanan akun Anda</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Verifikasi Dua Faktor</p>
-                  <p className="text-sm text-muted-foreground">Tambahkan lapisan keamanan ekstra untuk akun Anda</p>
-                </div>
-                <Button variant="outline">Aktifkan</Button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Sesi Aktif</p>
-                  <p className="text-sm text-muted-foreground">Kelola perangkat yang terhubung ke akun Anda</p>
-                </div>
-                <Button variant="outline">Kelola</Button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Riwayat Login</p>
-                  <p className="text-sm text-muted-foreground">Lihat riwayat login akun Anda</p>
-                </div>
-                <Button variant="outline">Lihat</Button>
-              </div>
+            <CardContent>
+              <p>Fitur keamanan akan segera hadir</p>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
