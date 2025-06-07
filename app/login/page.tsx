@@ -48,8 +48,9 @@ export default function LoginPage() {
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
         localStorage.setItem('token', data.token);
         localStorage.setItem('userRole', data.user.role);
         
@@ -58,39 +59,38 @@ export default function LoginPage() {
         
         toast.success('Login berhasil!');
         
-        // Redirect berdasarkan role
-        switch (data.user.role) {
-          case 'ADMIN':
-            router.push('/admin');
-            break;
-          case 'SELLER':
-            router.push('/seller/dashboard');
-            break;
-          default:
-            router.push('/user/dashboard');
-        }
-      }
-      
-      setLoginStatus({
-        type: 'success',
-        message: 'Login berhasil! Anda akan dialihkan ke halaman dashboard.'
-      });
+        setLoginStatus({
+          type: 'success',
+          message: 'Login berhasil! Anda akan dialihkan ke halaman dashboard.'
+        });
 
-      // Redirect berdasarkan role setelah 2 detik
-      setTimeout(() => {
-        if (localStorage.getItem('userRole') === 'ADMIN') {
-          router.push('/admin');
-        } else if (localStorage.getItem('userRole') === 'SELLER') {
-          router.push('/seller/dashboard');
-        } else {
-          router.push('/user/dashboard');
-        }
-      }, 2000);
+        // Redirect berdasarkan role setelah 2 detik
+        setTimeout(() => {
+          switch (data.user.role) {
+            case 'ADMIN':
+              router.push('/admin');
+              break;
+            case 'SELLER':
+              router.push('/seller/dashboard');
+              break;
+            default:
+              router.push('/user/dashboard');
+          }
+        }, 2000);
+      } else {
+        // Menampilkan pesan error dari server
+        setLoginStatus({
+          type: 'error',
+          message: data.error || 'Email atau password salah'
+        });
+        toast.error(data.error || 'Email atau password salah');
+      }
     } catch (error) {
       setLoginStatus({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Email atau password salah'
+        message: error instanceof Error ? error.message : 'Terjadi kesalahan saat login'
       });
+      toast.error('Terjadi kesalahan saat login');
     } finally {
       setIsLoading(false);
     }
